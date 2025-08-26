@@ -1,0 +1,240 @@
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+// ======= OOP Classes =======
+abstract class DBCONNECTION {
+    String name;
+    abstract void displayMenu();
+}
+
+class Employee extends DBCONNECTION {
+    //Override
+    void displayMenu() {
+        System.out.println("\n===== Employee Menu =====");
+        System.out.println("1. Add Customer");
+        System.out.println("2. Register Complaint");
+        System.out.println("3. View Complaints");
+        System.out.println("4. Update Complaint Status");
+        System.out.println("5. Exit");
+    }
+}
+
+class Customer extends DBCONNECTION {
+    @Override
+    void displayMenu() {
+        System.out.println("\n===== Customer Menu =====");
+        System.out.println("1. Register Complaint");
+        System.out.println("2. Exit");
+    }
+}
+
+class Complaint {
+    private String description;
+    private String status;
+
+    public Complaint(String description) {
+        this.description = description;
+        this.status = "Pending";
+    }
+    public String getDescription() { return description; }
+    public String getStatus() { return status; }
+}
+
+// ======= Main JDBC Application =======
+class ComplaintManagementSystem {
+    static final String DB_URL = "jdbc:mysql://localhost:3306/customer_complaint_analysis";
+    static final String USER = "root";
+    static final String PASS = "MYPASS@14";
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Welcome to Customer Complaint Management System");
+        System.out.println("Are you logging in as Employee or Customer?");
+        String role = sc.nextLine();
+
+        if (role.equalsIgnoreCase("Employee")) {
+            Employee emp = new Employee();
+            runEmployeeMenu(emp, sc);
+        } else {
+            Customer cust = new Customer();
+            runCustomerMenu(cust, sc);
+        }
+        sc.close();
+    }
+
+    // ===== EMPLOYEE FUNCTIONS =====
+    public static void runEmployeeMenu(Employee emp, Scanner sc) {
+        emp.displayMenu();
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
+            while (true) {
+                System.out.print("\nEnter choice: ");
+                int choice = sc.nextInt();
+                sc.nextLine(); // consume newline
+
+                switch (choice) {
+                    case 1 -> addCustomer(conn, sc);
+                    case 2 -> registerComplaint(conn, sc);
+                    case 3 -> viewComplaints(conn);
+                    case 4 -> updateComplaintStatus(conn, sc);
+                    case 5 -> {
+                        System.out.println("Exiting Employee Menu...");
+                        return;
+                    }
+                    default -> System.out.println("Invalid choice!");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ===== CUSTOMER FUNCTIONS =====
+    public static void runCustomerMenu(Customer cust, Scanner sc) {
+        cust.displayMenu();
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
+            while (true) {
+                System.out.print("\nEnter choice: ");
+                int choice = sc.nextInt();
+                sc.nextLine();
+
+                switch (choice) {
+                    case 1 -> {
+                        System.out.print("Enter your name: ");
+                        String cname = sc.nextLine();
+
+// Lookup customer ID from Customers table
+                        String sqlGetId = "SELECT customer_id FROM Customers WHERE name = ?";
+                        PreparedStatement psGetId = conn.prepareStatement(sqlGetId);
+                        psGetId.setString(1, cname);
+                        ResultSet rs = psGetId.executeQuery();
+
+                        if(rs.next()) {
+                            int cid = rs.getInt("customer_id");
+                            System.out.print("Enter complaint description: ");
+                            String desc = sc.nextLine();
+
+                            String sqlInsert = "INSERT INTO Complaints (customer_id, issue, complaint_date) VALUES (?, ?, NOW())";
+                            PreparedStatement psInsert = conn.prepareStatement(sqlInsert);
+                            psInsert.setInt(1, cid);
+                            psInsert.setString(2, desc);
+                            psInsert.executeUpdate();
+
+                            System.out.println("Complaint registered successfully!");
+                        } else {
+                            System.out.println("Customer not found, please register first.");
+                        }
+
+                    }
+                    case 2 -> {
+                        System.out.println("Exiting Customer Menu...");
+                        return;
+                    }
+                    default -> System.out.println("Invalid choice!");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ===== Helper Methods =====
+    private static void addCustomer(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("Enter customer name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter customer email: ");
+        String email = sc.nextLine();
+        System.out.print("Enter customer phone: ");
+        String phone = sc.nextLine();
+        System.out.print("Enter customer city: ");
+        String city = sc.nextLine();
+        System.out.print("Enter customer state: ");
+        String state = sc.nextLine();
+        System.out.print("Enter join date (YYYY-MM-DD): ");
+        String joinDate = sc.nextLine();
+
+        String sql = "INSERT INTO Customers (name, email, phone, city, state, join_date) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, name);
+        ps.setString(2, email);
+        ps.setString(3, phone);
+        ps.setString(4, city);
+        ps.setString(5, state);
+        ps.setDate(6, java.sql.Date.valueOf(joinDate)); // Convert string to SQL Date
+        ps.executeUpdate();
+        System.out.println("Customer added successfully!");
+    }
+
+
+    private static void registerComplaint(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("Enter order ID: ");
+        int orderId = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter customer ID: ");
+        int customerId = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter product ID: ");
+        int productId = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter employee ID: ");
+        int employeeId = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter complaint description: ");
+        String issue = sc.nextLine();
+
+        String sql = "INSERT INTO Complaints (order_id, customer_id, product_id, employee_id, complaint_date, issue) VALUES (?, ?, ?, ?, NOW(), ?)";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, orderId);
+        ps.setInt(2, customerId);
+        ps.setInt(3, productId);
+        ps.setInt(4, employeeId);
+        ps.setString(5, issue);
+        ps.executeUpdate();
+
+        System.out.println("Complaint registered successfully by Employee!");
+    }
+
+
+
+
+    private static void viewComplaints(Connection conn) throws SQLException {
+        String sql = "SELECT complaint_id, customer_id, issue, complaint_date FROM Complaints";
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+
+        System.out.println("\n--- Complaints List ---");
+        while (rs.next()) {
+            System.out.println("ID: " + rs.getInt("complaint_id") +
+                    ", Customer ID: " + rs.getInt("customer_id") +
+                    ", Issue: " + rs.getString("issue") +
+                    ", Date: " + rs.getDate("complaint_date"));
+        }
+    }
+
+
+
+    private static void updateComplaintStatus(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("Enter complaint ID: ");
+        int cid = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter new status (Pending/Resolved): ");
+        String status = sc.nextLine();
+
+        String sql = "UPDATE Complaints SET status = ? WHERE complaint_id = ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, status);
+        ps.setInt(2, cid);
+        int rows = ps.executeUpdate();
+        if (rows > 0) {
+            System.out.println("Complaint status updated!");
+        } else {
+            System.out.println("Complaint not found!");
+        }
+    }
+}

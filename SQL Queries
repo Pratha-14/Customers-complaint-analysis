@@ -1,0 +1,161 @@
+--SQL QUESRIES OF TABLES 
+
+-- Create database and use it
+CREATE DATABASE IF NOT EXISTS customer_complaint_analysis;
+USE customer_complaint_analysis;
+
+-- Drop tables if they exist to start fresh
+DROP TABLE IF EXISTS Complaints;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Customers;
+
+-- Customers table with auto-increment primary key
+CREATE TABLE Customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    join_date DATE
+);
+
+-- Products table
+CREATE TABLE Products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    price INT,
+    launch_date DATE
+);
+
+-- Employees table
+CREATE TABLE Employees (
+    employee_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department VARCHAR(50),
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Orders table with foreign keys
+CREATE TABLE Orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    order_date DATE,
+    quantity INT DEFAULT 1,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Products(product_id) ON DELETE CASCADE
+);
+
+-- Complaints table with status field and foreign keys
+CREATE TABLE Complaints (
+    complaint_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    complaint_date DATE,
+    issue VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'Pending',
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Products(product_id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES Employees(employee_id) ON DELETE CASCADE
+);
+
+-- Insert all 20 customers
+INSERT INTO Customers (name, email, phone, city, state, join_date) VALUES
+('Harish Menon', 'harishmgm01@gmail.com', '9111122344', 'Mysore', 'Karnataka', '2023-12-22'),
+('Jyoti Sharma', 'jyoshar@gmail.com', '9822333444', 'Chandauli', 'Uttar Pradesh', '2024-01-13'),
+('Swati Kulkarni', 'swatikulkarni@gmail.com', '9834553666', 'Nashik', 'Maharashtra', '2024-04-17'),
+('Aakash Jain', 'aakashjmr@gmail.com', '9985665567', 'Jaipur', 'Rajasthan', '2024-03-25'),
+('Manoj Kumar', 'manojkumar@gmail.com', '9875666678', 'Jodhpur', 'Rajasthan', '2024-04-15'),
+('Sonakshi Dutta', 'sonadutt@gmail.com', '7699988889', 'Agra', 'Uttar Pradesh', '2023-12-19'),
+('Neeta Bhargava', 'neetbharg@gmail.com', '8899001111', 'Faridabad', 'Haryana', '2024-05-14'),
+('Ritesh Sharma', 'riteshsharma@gmail.com', '8676899989', 'Lucknow', 'Uttar Pradesh', '2024-05-14'),
+('Priya Saini', 'priyasaini@gmail.com', '9899001221', 'Meerut', 'Uttar Pradesh', '2024-06-25'),
+('Vatsal Dixit', 'vatsaldixit@gmail.com', '9011233456', 'Ghaziabad', 'Uttar Pradesh', '2024-06-26'),
+('Simran Kaur', 'simranka23@gmail.com', '9212345678', 'Ludhiana', 'Punjab', '2024-07-21'),
+('Dheeraj Patel', 'dheerajpatel@gmail.com', '9123456789', 'Surat', 'Gujarat', '2024-07-25'),
+('Vidya Sharma', 'vidyasharma@gmail.com', '9345678901', 'Bhopal', 'Madhya Pradesh', '2024-08-01'),
+('Tarun Mehta', 'tarunmehta@gmail.com', '9456789012', 'Chandigarh', 'Punjab', '2024-06-15'),
+('Sneha Rao', 'snehar23@gmail.com', '9567890123', 'Hyderabad', 'Telangana', '2024-08-10'),
+('Alok Gupta', 'alokgupta@gmail.com', '9678901234', 'Patna', 'Bihar', '2024-07-13'),
+('Kavya Desai', 'kavyadesai@gmail.com', '9789012345', 'Ahmedabad', 'Gujarat', '2024-06-25'),
+('Neeraj Sinha', 'neerajsinha@gmail.com', '9890123456', 'Kolkata', 'West Bengal', '2024-07-30'),
+('Pooja Singh', 'poojasingh@gmail.com', '9001234567', 'Indore', 'Madhya Pradesh', '2024-08-07'),
+('Vikas Yadav', 'vikasyadav@gmail.com', '8112233445', 'Noida', 'Uttar Pradesh', '2024-08-12');
+
+-- Insert sample products
+INSERT INTO Products (name, category, price, launch_date) VALUES
+('Smartphone', 'Electronics', 15000, '2023-11-01'),
+('Laptop Y', 'Electronics', 55000, '2023-12-09'),
+('Washing Machine Alpha', 'Home Appliances', 23000, '2023-01-15'),
+('Headphones', 'Accessories', 2500, '2023-03-30'),
+('Smartwatch', 'Accessories', 4500, '2023-03-23'),
+('Refrigerator', 'Home Appliances', 28000, '2023-08-10'),
+('LED TV 43"', 'Electronics', 34000, '2023-08-30'),
+('Bluetooth Speaker', 'Accessories', 3200, '2023-09-18'),
+('Air Conditioner', 'Home Appliances', 42000, '2023-07-05'),
+('Gaming Laptop', 'Electronics', 87000, '2023-07-20'),
+('Fitness Band', 'Accessories', 1800, '2023-10-10'),
+('Microwave Oven', 'Home Appliances', 16500, '2023-08-02'),
+('Tablet X', 'Electronics', 31000, '2023-12-25'),
+('Power Bank', 'Accessories', 1200, '2024-02-11'),
+('Camera DSLR', 'Electronics', 53000, '2023-11-17'),
+('Ceiling Fan', 'Home Appliances', 3200, '2024-01-18');
+
+-- Insert employees
+INSERT INTO Employees (name, department, email) VALUES
+('Rajesh Kumar', 'Support', 'rajesh@company.com'),
+('Anjali Sharma', 'Technical', 'anjali@company.com'),
+('Mohit Agarwal', 'Sales', 'mohit@company.com'),
+('Suresh Mehta', 'Product Quality', 'quality@company.com'),
+('Priya Verma', 'Logistics', 'priya@company.com'),
+('Deepak Cha', 'Customer Experience', 'deepak@company.com');
+
+-- Insert orders
+INSERT INTO Orders (customer_id, product_id, order_date, quantity) VALUES
+(1, 1, '2023-06-01', 1),
+(2, 2, '2023-06-05', 2),
+(3, 4, '2023-06-10', 1),
+(4, 3, '2023-06-15', 1),
+(5, 2, '2023-06-20', 1),
+(6, 5, '2023-06-22', 1),
+(7, 2, '2023-06-25', 2),
+(8, 6, '2023-06-28', 1),
+(9, 4, '2023-07-01', 3),
+(10, 1, '2023-07-03', 1),
+(11, 2, '2023-07-05', 1),
+(12, 3, '2023-07-07', 2),
+(13, 5, '2023-07-10', 1),
+(14, 4, '2023-07-12', 1),
+(15, 6, '2023-07-15', 2),
+(16, 7, '2023-07-17', 1),
+(17, 8, '2023-07-19', 1),
+(18, 2, '2023-07-20', 2),
+(19, 9, '2023-07-22', 1),
+(20, 3, '2023-07-25', 1);
+
+-- Insert complaints
+INSERT INTO Complaints (order_id, customer_id, product_id, employee_id, complaint_date, issue) VALUES
+(1, 1, 1, 1, '2023-06-10', 'Battery drains quickly'),
+(2, 2, 2, 2, '2023-06-15', 'Laptop heating issue'),
+(3, 3, 4, 4, '2023-06-20', 'Right earbud not working'),
+(4, 4, 3, 2, '2023-06-25', 'Washing machine noisy'),
+(5, 5, 2, 1, '2023-06-28', 'Screen flickering'),
+(6, 7, 2, 2, '2023-07-03', 'No power supply'),
+(7, 9, 4, 4, '2023-07-09', 'Bluetooth not connecting'),
+(8, 10, 1, 1, '2023-07-12', 'Slow charging'),
+(9, 12, 3, 3, '2023-07-15', 'Drum not rotating'),
+(10, 15, 6, 6, '2023-07-20', 'Water not cooling'),
+(11, 18, 2, 3, '2023-07-22', 'Keyboard not working'),
+(12, 20, 3, 5, '2023-07-28', 'Spin cycle stuck');
+
+-- Optional Indexes for performance
+CREATE INDEX idx_complaints_status ON Complaints(status);
+CREATE INDEX idx_orders_customer ON Orders(customer_id);
+CREATE INDEX idx_orders_product ON Orders(product_id);
